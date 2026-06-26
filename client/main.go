@@ -1,16 +1,14 @@
 package main
 
 import (
-	"fmt"
 	"client/utils"
+	"fmt"
 )
-
-
 
 func main() {
 	fmt.Println("[§] Starting... [§]")
 	// token := utils.GetAgentId()
-	var token string = "f86bff97-d3e3-47a5-bb53-550ea5098f08"
+	var token string = "35822daa-243f-4e95-ae0e-3fba016a1f5a"
 	fmt.Println("Token : " + token)
 	utils.GetCommand(token)
 }
