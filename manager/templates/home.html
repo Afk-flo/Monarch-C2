@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="5">
+    <title>Agents connectés</title>
+</head>
+<body>
+    <h1>Agents connectés (<span id="count">{{ agents | length }}</span>)</h1>
+
+    <ul id="agent-list">
+        {% for agent_id in agents %}
+            <li><a href="{{ url_for('get_result', uuid=agent_id) }}">{{ agent_id }}</a></li>
+        {% endfor %}
+    </ul>
+
+    <script>
+        async function refresh() {
+            const res = await fetch("/api/agents");
+            const data = await res.json();
+
+            document.getElementById("count").textContent = data.agents.length;
+
+            const list = document.getElementById("agent-list");
+            list.innerHTML = data.agents.map(id =>
+                `<li><a href="/result/${id}">${id}</a></li>`
+            ).join("");
+        }
+
+        setInterval(refresh, 5000);
+</script>
+</body>
+</html>

