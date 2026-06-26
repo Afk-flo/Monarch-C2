@@ -159,4 +159,7 @@ func sendResult(agentId string, output string, taskId string) bool {
 
 }
 
-func die() {}
+func die() {
+	// Destruction call - Suppression éléments
+
+}

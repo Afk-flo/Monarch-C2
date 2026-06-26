@@ -1,0 +1,18 @@
+BINARY=client
+VERSION=1.0.0
+
+build-windows:
+	GOOS=windows GOARCH=amd64 go build -o dist/$(BINARY)_$(VERSION)_windows.exe .
+
+build-linux:
+	GOOS=linux GOARCH=amd64 go build -o dist/$(BINARY)_$(VERSION)_linux .
+
+build-darwin:
+	GOOS=darwin GOARCH=amd64 go build -o dist/$(BINARY)_$(VERSION)_darwin .
+
+build-all: build-windows build-linux build-darwin
+
+clean:
+	rm -rf dist/
+
+.PHONY: build-windows build-linux build-darwin build-all clean
